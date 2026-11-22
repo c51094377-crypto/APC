@@ -314,15 +314,15 @@
     let vehicleSpeedKmh = 0;
 
     const gearSpecs = {
-      '1': { minSpeed: 0,   maxSpeed: 15,  optimalMin: 0,  optimalMax: 13,  baseAccel: 14.0 },
-      '2': { minSpeed: 8,   maxSpeed: 28,  optimalMin: 10, optimalMax: 25,  baseAccel: 11.5 },
-      '3': { minSpeed: 18,  maxSpeed: 42,  optimalMin: 22, optimalMax: 38,  baseAccel: 9.5  },
-      '4': { minSpeed: 30,  maxSpeed: 58,  optimalMin: 35, optimalMax: 53,  baseAccel: 8.0  },
-      '5': { minSpeed: 44,  maxSpeed: 74,  optimalMin: 50, optimalMax: 68,  baseAccel: 6.8  },
-      '6': { minSpeed: 58,  maxSpeed: 90,  optimalMin: 64, optimalMax: 84,  baseAccel: 5.8  },
-      '7': { minSpeed: 72,  maxSpeed: 106, optimalMin: 80, optimalMax: 100, baseAccel: 5.0  },
-      '8': { minSpeed: 88,  maxSpeed: 125, optimalMin: 95, optimalMax: 118, baseAccel: 4.2  },
-      'R': { minSpeed: 0,   maxSpeed: 20,  optimalMin: 0,  optimalMax: 18,  baseAccel: 10.0 }
+      '1': { minSpeed: 0,   maxSpeed: 75,  optimalMin: 0,  optimalMax: 65,  baseAccel: 70.0 },
+      '2': { minSpeed: 40,  maxSpeed: 140, optimalMin: 50, optimalMax: 125, baseAccel: 57.5 },
+      '3': { minSpeed: 90,  maxSpeed: 210, optimalMin: 110, optimalMax: 190, baseAccel: 47.5 },
+      '4': { minSpeed: 150, maxSpeed: 290, optimalMin: 175, optimalMax: 265, baseAccel: 40.0 },
+      '5': { minSpeed: 220, maxSpeed: 370, optimalMin: 250, optimalMax: 340, baseAccel: 34.0 },
+      '6': { minSpeed: 290, maxSpeed: 450, optimalMin: 320, optimalMax: 420, baseAccel: 29.0 },
+      '7': { minSpeed: 360, maxSpeed: 530, optimalMin: 400, optimalMax: 500, baseAccel: 25.0 },
+      '8': { minSpeed: 440, maxSpeed: 625, optimalMin: 475, optimalMax: 590, baseAccel: 21.0 },
+      'R': { minSpeed: 0,   maxSpeed: 100, optimalMin: 0,  optimalMax: 90,  baseAccel: 50.0 }
     };
 
     function resolveGearFromLever() {
@@ -835,7 +835,6 @@
 
       controls.enabled = false;
       isFreeLook = true;
-      freeLookEuler.setFromQuaternion(target.quaternion, 'YXZ');
     }
 
     function loadGLB(file) {
@@ -938,7 +937,7 @@
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
 
-      const sensitivity = 0.003;
+      const sensitivity = 0.003 * 5;
       freeLookEuler.y -= dx * sensitivity;
       freeLookEuler.x -= dy * sensitivity;
       freeLookEuler.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, freeLookEuler.x));
