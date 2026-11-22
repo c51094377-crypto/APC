@@ -306,6 +306,7 @@
     let turretVelocity = 0;
     let steerAngle = 0;
     let vehicleHeading = 0;
+    let headingInitialized = false;
 
     // マニュアルトランスミッション状態
     let leverCol = 1;
@@ -314,15 +315,15 @@
     let vehicleSpeedKmh = 0;
 
     const gearSpecs = {
-      '1': { minSpeed: 0,   maxSpeed: 75,  optimalMin: 0,  optimalMax: 65,  baseAccel: 70.0 },
-      '2': { minSpeed: 40,  maxSpeed: 140, optimalMin: 50, optimalMax: 125, baseAccel: 57.5 },
-      '3': { minSpeed: 90,  maxSpeed: 210, optimalMin: 110, optimalMax: 190, baseAccel: 47.5 },
-      '4': { minSpeed: 150, maxSpeed: 290, optimalMin: 175, optimalMax: 265, baseAccel: 40.0 },
-      '5': { minSpeed: 220, maxSpeed: 370, optimalMin: 250, optimalMax: 340, baseAccel: 34.0 },
-      '6': { minSpeed: 290, maxSpeed: 450, optimalMin: 320, optimalMax: 420, baseAccel: 29.0 },
-      '7': { minSpeed: 360, maxSpeed: 530, optimalMin: 400, optimalMax: 500, baseAccel: 25.0 },
-      '8': { minSpeed: 440, maxSpeed: 625, optimalMin: 475, optimalMax: 590, baseAccel: 21.0 },
-      'R': { minSpeed: 0,   maxSpeed: 100, optimalMin: 0,  optimalMax: 90,  baseAccel: 50.0 }
+      '1': { minSpeed: 0,   maxSpeed: 15,  optimalMin: 0,  optimalMax: 13,  baseAccel: 14.0 },
+      '2': { minSpeed: 8,   maxSpeed: 28,  optimalMin: 10, optimalMax: 25,  baseAccel: 11.5 },
+      '3': { minSpeed: 18,  maxSpeed: 42,  optimalMin: 22, optimalMax: 38,  baseAccel: 9.5  },
+      '4': { minSpeed: 30,  maxSpeed: 58,  optimalMin: 35, optimalMax: 53,  baseAccel: 8.0  },
+      '5': { minSpeed: 44,  maxSpeed: 74,  optimalMin: 50, optimalMax: 68,  baseAccel: 6.8  },
+      '6': { minSpeed: 58,  maxSpeed: 90,  optimalMin: 64, optimalMax: 84,  baseAccel: 5.8  },
+      '7': { minSpeed: 72,  maxSpeed: 106, optimalMin: 80, optimalMax: 100, baseAccel: 5.0  },
+      '8': { minSpeed: 88,  maxSpeed: 125, optimalMin: 95, optimalMax: 118, baseAccel: 4.2  },
+      'R': { minSpeed: 0,   maxSpeed: 20,  optimalMin: 0,  optimalMax: 18,  baseAccel: 10.0 }
     };
 
     function resolveGearFromLever() {
@@ -664,7 +665,7 @@
         }
       }
 
-      // アクセル＆ギア別加速ロジック
+      // アクセル＆ギア別加速ロジック（移動速度を5ずつ移動に変更して加速・減速）
       let rpmRatio = 0.12;
       let isRedline = false;
 
@@ -677,7 +678,7 @@
           engineStateEl.textContent = 'IDLING';
         }
         if (!isBrake) {
-          const drag = 3.5 * dt;
+          const drag = 5.0 * dt;
           if (vehicleSpeedKmh > 0) vehicleSpeedKmh = Math.max(0, vehicleSpeedKmh - drag);
           else if (vehicleSpeedKmh < 0) vehicleSpeedKmh = Math.min(0, vehicleSpeedKmh + drag);
         }
@@ -690,15 +691,15 @@
         }
         if (isThrottle && !isBrake) {
           if (vehicleSpeedKmh > 0) {
-            vehicleSpeedKmh = Math.max(0, vehicleSpeedKmh - 15.0 * dt);
+            vehicleSpeedKmh = Math.max(0, vehicleSpeedKmh - 5.0);
           } else if (absSpd < spec.maxSpeed) {
             const eff = absSpd >= spec.optimalMax ? 0.15 : 1.0;
-            vehicleSpeedKmh = Math.max(-spec.maxSpeed, vehicleSpeedKmh - spec.baseAccel * 5.0 * eff * dt);
+            vehicleSpeedKmh = Math.max(-spec.maxSpeed, vehicleSpeedKmh - 5.0 * eff);
           }
           engineStateEl.textContent = 'REVERSE';
         } else if (!isBrake) {
           engineStateEl.textContent = absSpd > 0.1 ? 'COASTING' : 'IDLING';
-          if (vehicleSpeedKmh < 0) vehicleSpeedKmh = Math.min(0, vehicleSpeedKmh + 3.0 * dt);
+          if (vehicleSpeedKmh < 0) vehicleSpeedKmh = Math.min(0, vehicleSpeedKmh + 5.0);
         } else {
           engineStateEl.textContent = 'BRAKING';
         }
@@ -713,7 +714,7 @@
 
         if (isThrottle && !isBrake) {
           if (vehicleSpeedKmh < 0) {
-            vehicleSpeedKmh = Math.min(0, vehicleSpeedKmh + 15.0 * dt);
+            vehicleSpeedKmh = Math.min(0, vehicleSpeedKmh + 5.0);
           } else if (spd < spec.maxSpeed) {
             let torqueEfficiency = 1.0;
             if (spd < spec.optimalMin) {
@@ -723,13 +724,13 @@
             } else if (spd >= spec.optimalMax) {
               torqueEfficiency = Math.max(0.02, 1.0 - (spd - spec.optimalMax) / (spec.maxSpeed - spec.optimalMax));
             }
-            vehicleSpeedKmh = Math.min(spec.maxSpeed, vehicleSpeedKmh + spec.baseAccel * 5.0 * torqueEfficiency * dt);
+            vehicleSpeedKmh = Math.min(spec.maxSpeed, vehicleSpeedKmh + 5.0 * torqueEfficiency);
           }
           engineStateEl.textContent = isRedline ? 'SHIFT UP!' : 'ACCELERATING';
         } else if (!isBrake) {
           engineStateEl.textContent = spd > 0.1 ? 'COASTING' : 'IDLING';
           if (vehicleSpeedKmh > 0) {
-            vehicleSpeedKmh = Math.max(0, vehicleSpeedKmh - 2.5 * dt);
+            vehicleSpeedKmh = Math.max(0, vehicleSpeedKmh - 5.0);
           }
         } else {
           engineStateEl.textContent = 'BRAKING';
@@ -796,6 +797,11 @@
         const directionSign = (currentGear === 'R') ? 1.0 : -1.0;
         const effectiveDist = moveDist * directionSign;
 
+        if (!headingInitialized) {
+          vehicleHeading = apcGroup.rotation.y;
+          headingInitialized = true;
+        }
+
         if (steerDir !== 0) {
           const turnRadius = 170.050;
           const angularSpeed = (Math.abs(vehicleSpeedKmh) / 3.6) / turnRadius;
@@ -835,6 +841,7 @@
 
       controls.enabled = false;
       isFreeLook = true;
+      freeLookEuler.setFromQuaternion(target.quaternion, 'YXZ');
     }
 
     function loadGLB(file) {
@@ -855,6 +862,7 @@
         turretVelocity = 0;
         steerAngle = 0;
         vehicleHeading = 0;
+        headingInitialized = false;
         leverCol = 1;
         leverRow = 0;
         vehicleSpeedKmh = 0;
@@ -937,7 +945,7 @@
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
 
-      const sensitivity = 0.003 * 5;
+      const sensitivity = 0.003;
       freeLookEuler.y -= dx * sensitivity;
       freeLookEuler.x -= dy * sensitivity;
       freeLookEuler.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, freeLookEuler.x));
